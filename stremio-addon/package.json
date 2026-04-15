@@ -18,6 +18,7 @@
     "pump": "^3.0.4",
     "qbittorrent-api-v2": "^1.2.2",
     "range-parser": "^1.2.1",
+    "socket.io": "^4.8.3",
     "stremio-addon-sdk": "^1.6.10",
     "torrent-search-api": "^2.1.4",
     "torrent-stream": "^1.2.1"
