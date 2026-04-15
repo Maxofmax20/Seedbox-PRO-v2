@@ -14,21 +14,21 @@ const FormData = require('form-data');
 const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 50 });
 const upload = multer({ dest: '/tmp/uploads/' });
 
-// Config
+// Security Config
 const USER = process.env.DASHBOARD_USER || 'Demos';
 const PASS = process.env.DASHBOARD_PASS || '1211982Samir?';
 const SECRET = process.env.SESSION_SECRET || 'super-secret-key';
 
-const PROWLARR_URL = 'http://prowlarr:9696';
-const PROWLARR_API_KEY = 'd406af9644fb47fdbb7da3fac568067d';
 const JACKETT_URL = 'http://jackett:9117';
 const JACKETT_API_KEY = '98aj5khicxsvobijwt6wijocu9bugksl';
+const PROWLARR_URL = 'http://prowlarr:9696';
+const PROWLARR_API_KEY = 'd406af9644fb47fdbb7da3fac568067d';
 
 const manifest = {
-    id: 'org.myseedbox.pro.final',
-    version: '3.0.0',
+    id: 'org.myseedbox.sandbox.v3',
+    version: '3.0.1',
     name: 'SandBox PRO Streamer',
-    description: 'Triple-Engine Secure Seedbox Streamer.',
+    description: 'Jackett-Optimized Private Seedbox Streamer.',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt'],
@@ -40,28 +40,45 @@ const QBT_URL = 'http://172.21.0.2:8080';
 const activeEngines = new Map();
 
 // --- SEARCH ENGINES ---
+
+// 1. PRIMARY: JACKETT
+async function searchJackett(query, type) {
+    try {
+        const cat = type === 'movie' ? 2000 : 5000;
+        console.log(`[JACKETT] Searching for: ${query}`);
+        const res = await axios.get(`${JACKETT_URL}/api/v2.0/indexers/all/results?apikey=${JACKETT_API_KEY}&Query=${encodeURIComponent(query)}&Category=${cat}`, { httpAgent, timeout: 8000 });
+        return (res.data.Results || []).map(r => ({ 
+            title: r.Title, seeders: r.Seeders, size: r.Size, 
+            magnet: r.MagnetUri || r.Link,
+            engine: 'Jackett'
+        }));
+    } catch (e) { 
+        console.log(`[JACKETT] Failed: ${e.message}`);
+        return []; 
+    }
+}
+
+// 2. SECONDARY: PROWLARR
 async function searchProwlarr(query, type) {
     try {
         const cat = type === 'movie' ? 2000 : 5000;
         const res = await axios.get(`${PROWLARR_URL}/api/v1/search?apikey=${PROWLARR_API_KEY}&query=${encodeURIComponent(query)}&categories=${cat}`, { httpAgent, timeout: 5000 });
-        return (res.data || []).map(r => ({ title: r.title, seeders: r.seeders, size: r.size, magnet: r.downloadUrl || r.guid }));
+        return (res.data || []).map(r => ({ 
+            title: r.title, seeders: r.seeders, size: r.size, 
+            magnet: r.guid || r.downloadUrl,
+            engine: 'Prowlarr'
+        }));
     } catch (e) { return []; }
 }
 
-async function searchJackett(query, type) {
-    try {
-        const cat = type === 'movie' ? 2000 : 5000;
-        const res = await axios.get(`${JACKETT_URL}/api/v2.0/indexers/all/results?apikey=${JACKETT_API_KEY}&Query=${encodeURIComponent(query)}&Category=${cat}`, { httpAgent, timeout: 5000 });
-        return (res.data.Results || []).map(r => ({ title: r.Title, seeders: r.Seeders, size: r.Size, magnet: r.MagnetUri || r.Link }));
-    } catch (e) { return []; }
-}
-
+// 3. FALLBACK: DIRECT TPB
 async function searchDirect(query) {
     try {
         const res = await axios.get(`https://apibay.org/q.php?q=${encodeURIComponent(query)}`, { timeout: 5000 });
         return (res.data || []).filter(r => r.id !== '0').map(r => ({
             title: r.name, seeders: r.seeders, size: r.size,
-            magnet: `magnet:?xt=urn:btih:${r.info_hash}&dn=${encodeURIComponent(r.name)}`
+            magnet: `magnet:?xt=urn:btih:${r.info_hash}&dn=${encodeURIComponent(r.name)}`,
+            engine: 'Direct'
         }));
     } catch (e) { return []; }
 }
@@ -70,7 +87,6 @@ function analyzeTorrent(title, meta) {
     const t = title.toLowerCase();
     const cleanMeta = meta.name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     if (['xxx', 'porn', 'adult', 'sex'].some(a => t.includes(a))) return null;
-    if (['cam', 'hdcam', 'ts'].some(tr => t.split(/[\s\.]+/).includes(tr))) return null;
     if (!t.replace(/[^a-z0-9\s]/g, '').includes(cleanMeta.split(' ')[0])) return null;
     let q = 'SD';
     if (t.includes('2160p') || t.includes('4k')) q = '4K UHD';
@@ -87,15 +103,16 @@ builder.defineStreamHandler(async ({ type, id }) => {
         let query = meta.name;
         if (type === 'series') query += ` S${parts[1].padStart(2, '0')}E${parts[2].padStart(2, '0')}`;
 
-        let [pResults, jResults] = await Promise.all([searchProwlarr(query, type), searchJackett(query, type)]);
-        let combined = [...pResults, ...jResults];
-        if (combined.length === 0) combined = await searchDirect(query);
+        // Try Jackett first, then Prowlarr, then Direct
+        let results = await searchJackett(query, type);
+        if (results.length === 0) results = await searchProwlarr(query, type);
+        if (results.length === 0) results = await searchDirect(query);
         
-        const streams = combined.map(r => {
+        const streams = results.map(r => {
             const analysis = analyzeTorrent(r.title, meta);
             if (!analysis) return null;
             return {
-                name: `Seedbox ${analysis.q}`,
+                name: `[${r.engine}] ${analysis.q}`,
                 title: `${r.title}\n👤 ${r.seeders || '?'} | 💾 ${(r.size / 1024 / 1024 / 1024).toFixed(2)} GB`,
                 url: `http://${process.env.DOMAIN}/play?magnet=${encodeURIComponent(r.magnet)}`
             };
@@ -126,27 +143,16 @@ app.use('/api/files', express.static('/downloads'));
 app.use('/', getRouter(builder.getInterface()));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- UPDATED PLAY ENDPOINT ---
 app.get('/play', async (req, res) => {
     let { magnet } = req.query;
     if (!magnet) return res.status(400).send('No magnet');
 
-    console.log(`[PLAY] Request for: ${magnet.substring(0, 50)}...`);
-
-    // 1. Resolve Magnet if it's a URL
+    // Resolve Redirects (for Jackett links)
     if (magnet.startsWith('http')) {
         try {
-            console.log(`[PLAY] Resolving URL to Magnet...`);
             const head = await axios.head(magnet, { maxRedirects: 0, validateStatus: null });
-            if (head.headers.location) {
-                magnet = head.headers.location;
-                console.log(`[PLAY] Resolved to: ${magnet.substring(0, 50)}...`);
-            }
-        } catch (e) { console.log(`[PLAY] URL Resolution failed, trying original.`); }
-    }
-
-    if (!magnet.includes('btih:')) {
-        return res.status(400).send('Invalid magnet or link provided by provider.');
+            if (head.headers.location) magnet = head.headers.location;
+        } catch (e) {}
     }
 
     let engine = activeEngines.get(magnet);
@@ -155,8 +161,7 @@ app.get('/play', async (req, res) => {
         engine.progress = 0; activeEngines.set(magnet, engine);
         engine.on('ready', () => { 
             const f = engine.files.reduce((a, b) => a.length > b.length ? a : b); 
-            engine.mainFile = f; engine.name = f.name; 
-            f.select(); 
+            engine.mainFile = f; engine.name = f.name; f.select(); 
         });
         setInterval(() => { if (engine.mainFile) { const t = Math.ceil(engine.mainFile.length / engine.torrent.pieceLength); let dl = 0; for (let i=0; i<t; i++) if (engine.bitfield.get(i)) dl++; engine.progress = ((dl / t) * 100).toFixed(1); } }, 5000);
     }
@@ -169,8 +174,7 @@ app.get('/play', async (req, res) => {
         res.status(206); res.setHeader('Content-Length', end - start + 1); res.setHeader('Content-Range', `bytes ${start}-${end}/${f.length}`);
         pump(f.createReadStream({ start, end }), res);
     };
-
     if (engine.mainFile) serve(); else engine.once('ready', serve);
 });
 
-app.listen(7000, () => console.log('Seedbox PRO v1.0.19 running...'));
+app.listen(7000, () => console.log('Jackett-Optimized PRO v3.0.1 running...'));
