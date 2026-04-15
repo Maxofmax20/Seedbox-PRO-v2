@@ -25,7 +25,7 @@
         <div class="w-20 h-20 bg-indigo-600 rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
             <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
-        <h1 class="text-3xl font-extrabold mb-8">SandBox <span class="text-indigo-500">PRO</span></h1>
+        <h1 class="text-3xl font-extrabold mb-8 text-center">SandBox <span class="text-indigo-500">PRO</span></h1>
         <div class="w-full max-w-xs space-y-4">
             <input type="text" id="username" placeholder="User" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-6 py-4 text-sm outline-none focus:border-indigo-500">
             <input type="password" id="password" placeholder="Pass" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-6 py-4 text-sm outline-none focus:border-indigo-500">
@@ -48,18 +48,25 @@
         </header>
 
         <main class="p-6 safe-bottom space-y-8">
+            <!-- INSTALL CARD (Prominent) -->
+            <div class="glass rounded-[2.5rem] p-8 relative overflow-hidden border-l-4 border-indigo-500">
+                <h3 class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-4">Stremio Provider</h3>
+                <div class="mb-6">
+                    <p class="text-sm font-bold text-slate-300 leading-relaxed mb-2">Connect your private server to Stremio.</p>
+                    <div id="m-url-full" class="text-[9px] bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-indigo-400/70 break-all">Loading...</div>
+                </div>
+                <a id="install-btn" href="#" class="block w-full text-center bg-indigo-600 py-4 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/30">INSTALL ADDON</a>
+            </div>
+
             <!-- Hero Stats -->
-            <div class="glass rounded-[2.5rem] p-8 relative overflow-hidden">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl"></div>
-                <div class="relative z-10 flex justify-between items-end">
-                    <div>
-                        <h3 class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Downstream</h3>
-                        <div class="text-3xl font-black text-green-400" id="total-speed">0.0 KB/s</div>
-                    </div>
-                    <div class="text-right">
-                        <h3 class="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Active</h3>
-                        <div class="text-3xl font-black gradient-text" id="stream-count">0</div>
-                    </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass rounded-[2rem] p-6 text-center">
+                    <h3 class="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1 italic">Active</h3>
+                    <div class="text-3xl font-black gradient-text" id="stream-count">0</div>
+                </div>
+                <div class="glass rounded-[2rem] p-6 text-center">
+                    <h3 class="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-1 italic">Speed</h3>
+                    <div class="text-xl font-black text-green-400 mt-1" id="total-speed">0.0 KB/s</div>
                 </div>
             </div>
 
@@ -92,30 +99,30 @@
             </div>
         </nav>
 
-        <!-- App Drawer (Slide up from bottom) -->
+        <!-- App Drawer -->
         <div id="app-drawer" class="fixed inset-0 z-[100] hidden">
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleDrawer()"></div>
             <div id="drawer-content" class="absolute bottom-0 left-0 right-0 glass rounded-t-[3rem] p-10 space-y-6 transition-transform duration-500 drawer-hidden">
                 <div class="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-8"></div>
-                <h3 class="text-center font-black uppercase tracking-widest text-indigo-400 mb-8 italic">Internal Systems</h3>
+                <h3 class="text-center font-black uppercase tracking-widest text-indigo-400 mb-8 italic text-xs">Internal Systems</h3>
                 <div class="grid grid-cols-3 gap-6">
-                    <a href="/radarr" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V4a1 1 0 00-1-1H4a1 1 0 00-1 1v15a1 1 0 001 1z"/></svg></div><span class="text-[9px] font-black uppercase">Radarr</span></a>
-                    <a href="/sonarr" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18"/></svg></div><span class="text-[9px] font-black uppercase">Sonarr</span></a>
-                    <a href="/prowlarr" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div><span class="text-[9px] font-black uppercase">Search</span></a>
-                    <a href="/qbittorrent" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg></div><span class="text-[9px] font-black uppercase">Torrent</span></a>
-                    <a href="/jackett" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5"/></svg></div><span class="text-[9px] font-black uppercase">Jackett</span></a>
-                    <button onclick="handleLogout()" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/></svg></div><span class="text-[9px] font-black uppercase">Exit</span></button>
+                    <a href="/radarr" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 underline decoration-indigo-500/30 underline-offset-4 font-black text-xs">R</div><span class="text-[9px] font-black uppercase">Radarr</span></a>
+                    <a href="/sonarr" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 font-black text-xs">S</div><span class="text-[9px] font-black uppercase">Sonarr</span></a>
+                    <a href="/prowlarr" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 font-black text-xs">P</div><span class="text-[9px] font-black uppercase">Prowl</span></a>
+                    <a href="/qbittorrent" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 font-black text-xs">Q</div><span class="text-[9px] font-black uppercase">Torrent</span></a>
+                    <a href="/jackett" target="_blank" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 font-black text-xs">J</div><span class="text-[9px] font-black uppercase">Jackett</span></a>
+                    <button onclick="handleLogout()" class="flex flex-col items-center gap-3"><div class="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 font-black text-xs">X</div><span class="text-[9px] font-black uppercase">Exit</span></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Add Modal -->
     <div id="add-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 backdrop-blur-md p-6">
-        <div class="glass w-full max-w-sm rounded-[2.5rem] p-8">
-            <div class="flex justify-between items-center mb-8"><h3 class="font-black italic">ADD MEDIA</h3><button onclick="document.getElementById('add-modal').classList.add('hidden')"><svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+        <div class="glass w-full max-w-sm rounded-[2.5rem] p-8 animate-card">
+            <div class="flex justify-between items-center mb-8"><h3 class="font-black italic text-indigo-400">ADD MEDIA</h3><button onclick="document.getElementById('add-modal').classList.add('hidden')"><svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
             <div class="space-y-6">
-                <div><label class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Magnet URL</label><input type="text" id="magnet-input" placeholder="Paste magnet..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 text-xs outline-none focus:border-indigo-500"><button onclick="addByMagnet()" class="w-full mt-3 bg-indigo-600 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-indigo-500/20">Inject Magnet</button></div>
+                <div><label class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Magnet URL</label><input type="text" id="magnet-input" placeholder="Paste magnet..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 text-xs outline-none focus:border-indigo-500 transition-all font-mono"><button onclick="addByMagnet()" class="w-full mt-3 bg-indigo-600 py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-indigo-500/20">Inject Magnet</button></div>
                 <div class="text-center text-[9px] font-black text-slate-700 uppercase tracking-widest">— OR —</div>
                 <button onclick="document.getElementById('file-input').click()" class="w-full bg-slate-800 py-4 rounded-2xl font-black text-xs uppercase border border-slate-700">Upload Torrent</button>
                 <input type="file" id="file-input" class="hidden">
@@ -124,6 +131,10 @@
     </div>
 
     <script>
+        const manifestUrl = window.location.origin + '/manifest.json';
+        document.getElementById('m-url-full').innerText = manifestUrl;
+        document.getElementById('install-btn').href = 'stremio://' + window.location.host + '/manifest.json';
+
         function toggleDrawer() {
             const drawer = document.getElementById('app-drawer');
             const content = document.getElementById('drawer-content');
