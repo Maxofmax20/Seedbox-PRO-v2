@@ -1,0 +1,101 @@
+version: "3.8"
+
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+      - WEBUI_PORT=8080
+    volumes:
+      - ./config/qbittorrent:/config
+      - ./data/downloads:/downloads
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+    volumes:
+      - ./config/jellyfin:/config
+      - ./data/downloads:/data/downloads:ro
+    ports:
+      - 8096:8096
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  jackett:
+    image: linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+    volumes:
+      - ./config/jackett:/config
+    ports:
+      - 9117:9117
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+      - SUBDOMAINS=${SUBDOMAINS}
+      - TOKEN=${DUCKDNS_TOKEN}
+    restart: unless-stopped
+
+  stremio-addon:
+    build: ./stremio-addon
+    container_name: stremio-addon
+    environment:
+      - PORT=7000
+      - JACKETT_API_KEY=${JACKETT_API_KEY}
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./data/downloads:/downloads
+    ports:
+      - 7000:7000
+    depends_on:
+      - qbittorrent
+      - jackett
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    command: tunnel --url http://stremio-addon:7000
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  jackett-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: jackett-tunnel
+    command: tunnel --url http://jackett:9117
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+networks:
+  seedbox_net:
+    driver: bridge
