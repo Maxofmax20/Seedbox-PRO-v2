@@ -69,6 +69,9 @@ services:
       - PORT=7000
       - JACKETT_API_KEY=${JACKETT_API_KEY}
       - DOMAIN=${DOMAIN}
+      - DASHBOARD_USER=${DASHBOARD_USER}
+      - DASHBOARD_PASS=${DASHBOARD_PASS}
+      - SESSION_SECRET=${SESSION_SECRET}
     volumes:
       - ./data/downloads:/downloads
     ports:
