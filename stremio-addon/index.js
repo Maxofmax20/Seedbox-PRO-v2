@@ -25,9 +25,9 @@ const JACKETT_URL = 'http://jackett:9117';
 const JACKETT_API_KEY = '98aj5khicxsvobijwt6wijocu9bugksl';
 
 const manifest = {
-    id: 'org.myseedbox.addon.v19',
-    version: '1.0.19',
-    name: 'Seedbox Torrentio PRO',
+    id: 'org.myseedbox.pro.final',
+    version: '3.0.0',
+    name: 'SandBox PRO Streamer',
     description: 'Triple-Engine Secure Seedbox Streamer.',
     resources: ['stream'],
     types: ['movie', 'series'],
