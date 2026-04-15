@@ -36,8 +36,74 @@ services:
     networks:
       - seedbox_net
 
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+    volumes:
+      - ./config/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+    volumes:
+      - ./config/radarr:/config
+      - ./data/downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Africa/Cairo
+    volumes:
+      - ./config/sonarr:/config
+      - ./data/downloads:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Africa/Cairo
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
+  tor-proxy:
+    image: peterdavehello/tor-socks-proxy:latest
+    container_name: tor-proxy
+    restart: unless-stopped
+    networks:
+      - seedbox_net
+
   jackett:
-    image: linuxserver/jackett:latest
+    image: lscr.io/linuxserver/jackett:latest
     container_name: jackett
     environment:
       - PUID=1000
@@ -79,22 +145,7 @@ services:
     depends_on:
       - qbittorrent
       - jackett
-    restart: unless-stopped
-    networks:
-      - seedbox_net
-
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflare-tunnel
-    command: tunnel --url http://stremio-addon:7000
-    restart: unless-stopped
-    networks:
-      - seedbox_net
-
-  jackett-tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: jackett-tunnel
-    command: tunnel --url http://jackett:9117
+      - prowlarr
     restart: unless-stopped
     networks:
       - seedbox_net

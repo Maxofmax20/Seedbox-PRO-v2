@@ -14,16 +14,21 @@ const FormData = require('form-data');
 const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 50 });
 const upload = multer({ dest: '/tmp/uploads/' });
 
-// Security Config
-const USER = process.env.DASHBOARD_USER || 'admin';
-const PASS = process.env.DASHBOARD_PASS || 'PtkWFsypA';
+// Config
+const USER = process.env.DASHBOARD_USER || 'Demos';
+const PASS = process.env.DASHBOARD_PASS || '1211982Samir?';
 const SECRET = process.env.SESSION_SECRET || 'super-secret-key';
 
+const PROWLARR_URL = 'http://prowlarr:9696';
+const PROWLARR_API_KEY = 'd406af9644fb47fdbb7da3fac568067d';
+const JACKETT_URL = 'http://jackett:9117';
+const JACKETT_API_KEY = '98aj5khicxsvobijwt6wijocu9bugksl';
+
 const manifest = {
-    id: 'org.myseedbox.addon.v15',
-    version: '1.0.15',
+    id: 'org.myseedbox.addon.v18',
+    version: '1.0.18',
     name: 'Seedbox Torrentio PRO',
-    description: 'Secure Metadata & Safety Filtered Seedbox.',
+    description: 'Triple-Engine (Prowlarr+Jackett+Direct) Seedbox Streamer.',
     resources: ['stream'],
     types: ['movie', 'series'],
     idPrefixes: ['tt'],
@@ -31,36 +36,52 @@ const manifest = {
 };
 
 const builder = new addonBuilder(manifest);
-const JACKETT_URL = 'http://jackett:9117';
-const JACKETT_API_KEY = process.env.JACKETT_API_KEY;
 const QBT_URL = 'http://172.21.0.3:8080';
 const activeEngines = new Map();
 
-// --- AUTH MIDDLEWARE ---
-function isAuthenticated(req, res, next) {
-    if (req.session.user) return next();
-    res.status(401).json({ error: 'Unauthorized' });
+// --- SEARCH ENGINES ---
+async function searchProwlarr(query, type) {
+    try {
+        const cat = type === 'movie' ? 2000 : 5000;
+        const res = await axios.get(`${PROWLARR_URL}/api/v1/search?apikey=${PROWLARR_API_KEY}&query=${encodeURIComponent(query)}&categories=${cat}`, { httpAgent, timeout: 5000 });
+        return (res.data || []).map(r => ({ title: r.title, seeders: r.seeders, size: r.size, magnet: r.guid || r.downloadUrl }));
+    } catch (e) { return []; }
 }
 
-// --- qBittorrent Interaction ---
-let qbtCookie = '';
-async function qbtRequest(method, path, data = null, isMultipart = false) {
-    if (!qbtCookie) {
-        const params = new URLSearchParams();
-        params.append('username', 'admin');
-        params.append('password', 'PtkWFsypA');
-        const res = await axios.post(`${QBT_URL}/api/v2/auth/login`, params, { httpAgent });
-        qbtCookie = res.headers['set-cookie'][0];
-    }
-    const config = { headers: { Cookie: qbtCookie }, httpAgent };
-    if (method === 'GET') return (await axios.get(`${QBT_URL}${path}`, config)).data;
-    if (isMultipart) return (await axios.post(`${QBT_URL}${path}`, data, { ...config, headers: { ...config.headers, ...data.getHeaders() } })).data;
-    const params = new URLSearchParams();
-    if (data) Object.keys(data).forEach(key => params.append(key, data[key]));
-    return (await axios.post(`${QBT_URL}${path}`, params, config)).data;
+async function searchJackett(query, type) {
+    try {
+        const cat = type === 'movie' ? 2000 : 5000;
+        const res = await axios.get(`${JACKETT_URL}/api/v2.0/indexers/all/results?apikey=${JACKETT_API_KEY}&Query=${encodeURIComponent(query)}&Category=${cat}`, { httpAgent, timeout: 5000 });
+        return (res.data.Results || []).map(r => ({ title: r.Title, seeders: r.Seeders, size: r.Size, magnet: r.MagnetUri || r.Link }));
+    } catch (e) { return []; }
 }
 
-// --- STREMIO HANDLER (No Auth Needed for Stremio App) ---
+// DIRECT BACKUP (ThePirateBay API - Often works when others fail)
+async function searchDirect(query) {
+    try {
+        const res = await axios.get(`https://apibay.org/q.php?q=${encodeURIComponent(query)}`, { timeout: 5000 });
+        return (res.data || []).filter(r => r.id !== '0').map(r => ({
+            title: r.name, seeders: r.seeders, size: r.size,
+            magnet: `magnet:?xt=urn:btih:${r.info_hash}&dn=${encodeURIComponent(r.name)}`
+        }));
+    } catch (e) { return []; }
+}
+
+function analyzeTorrent(title, meta) {
+    const t = title.toLowerCase();
+    const cleanMeta = meta.name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const adult = ['xxx', 'porn', 'adult', 'sex', 'hentai', 'brazzers'];
+    if (adult.some(a => t.includes(a))) return null;
+    const trash = ['cam', 'hdcam', 'ts', 'telesync', 'tc'];
+    if (trash.some(tr => t.split(/[\s\.]+/).includes(tr))) return null;
+    if (!t.replace(/[^a-z0-9\s]/g, '').includes(cleanMeta.split(' ')[0])) return null;
+    let q = 'SD';
+    if (t.includes('2160p') || t.includes('4k')) q = '4K UHD';
+    else if (t.includes('1080p')) q = '1080p FHD';
+    else if (t.includes('720p')) q = '720p HD';
+    return { q };
+}
+
 builder.defineStreamHandler(async ({ type, id }) => {
     try {
         const parts = id.split(':');
@@ -68,92 +89,78 @@ builder.defineStreamHandler(async ({ type, id }) => {
         const meta = metaRes.data.meta;
         let query = meta.name;
         if (type === 'series') query += ` S${parts[1].padStart(2, '0')}E${parts[2].padStart(2, '0')}`;
-        const res = await axios.get(`${JACKETT_URL}/api/v2.0/indexers/all/results?apikey=${JACKETT_API_KEY}&Query=${encodeURIComponent(query)}&Category=${type==='movie'?'2000':'5000'}`, { httpAgent });
-        const results = (res.data.Results || []).slice(0, 15);
-        return {
-            streams: results.map(r => ({
-                name: `Seedbox Stream`,
-                title: `${r.Title}\n👤 ${r.Seeders || '?'} | 💾 ${(r.Size / 1024 / 1024 / 1024).toFixed(2)} GB`,
-                url: `http://${process.env.DOMAIN}/play?magnet=${encodeURIComponent(r.MagnetUri || r.Link)}`
-            }))
-        };
+
+        console.log(`[STREMIO] Comprehensive search for: ${query}`);
+
+        // Try Prowlarr and Jackett first
+        let [pResults, jResults] = await Promise.all([searchProwlarr(query, type), searchJackett(query, type)]);
+        let combined = [...pResults, ...jResults];
+
+        // If no results, try the Direct Backup
+        if (combined.length === 0) {
+            console.log(`[STREMIO] Prowlarr/Jackett failed. Trying direct backup...`);
+            combined = await searchDirect(query);
+        }
+        
+        const streams = combined.map(r => {
+            const analysis = analyzeTorrent(r.title, meta);
+            if (!analysis) return null;
+            return {
+                name: `Seedbox ${analysis.q}`,
+                title: `${r.title}\n👤 ${r.seeders || '?'} | 💾 ${(r.size / 1024 / 1024 / 1024).toFixed(2)} GB`,
+                url: `http://${process.env.DOMAIN}/play?magnet=${encodeURIComponent(r.magnet)}`
+            };
+        }).filter(Boolean);
+
+        return { streams: streams.slice(0, 20) };
     } catch (e) { return { streams: [] }; }
 });
 
 const app = express();
 app.use(express.json());
+app.use(session({ secret: SECRET, resave: false, saveUninitialized: false, cookie: { maxAge: 1000 * 60 * 60 * 24 * 30 } }));
 
-// Session Setup
-app.use(session({
-    secret: SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 24 hours
-}));
+function isAuthenticated(req, res, next) { if (req.session.user) return next(); res.status(401).json({ error: 'Unauthorized' }); }
 
-// 1. Login Endpoint
 app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === USER && password === PASS) {
-        req.session.user = username;
-        return res.json({ success: true });
-    }
-    res.status(401).json({ error: 'Invalid credentials' });
+    if (req.body.username === USER && req.body.password === PASS) { req.session.user = USER; return res.json({ success: true }); }
+    res.status(401).json({ error: 'Invalid' });
 });
 
-// 2. Auth Check for Dashboard
-app.get('/api/me', (req, res) => {
-    if (req.session.user) return res.json({ loggedIn: true });
-    res.json({ loggedIn: false });
-});
+app.get('/api/me', (req, res) => res.json({ loggedIn: !!req.session.user }));
+app.post('/api/logout', (req, res) => { req.session.destroy(); res.json({ success: true }); });
 
-// 3. Logout
-app.post('/api/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
-});
-
-// Protect All Management APIs
 app.use('/api/torrents', isAuthenticated);
 app.use('/api/files', isAuthenticated);
 app.use('/status', isAuthenticated);
-
-// Serve Files
 app.use('/api/files', express.static('/downloads'));
 app.use('/', getRouter(builder.getInterface()));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Management Endpoints
+// qBittorrent
+let qbtCookie = '';
+async function qbtRequest(method, path, data = null, isMultipart = false) {
+    if (!qbtCookie) {
+        const p = new URLSearchParams(); p.append('username', 'admin'); p.append('password', 'PtkWFsypA');
+        const r = await axios.post(`${QBT_URL}/api/v2/auth/login`, p, { httpAgent });
+        qbtCookie = r.headers['set-cookie'][0];
+    }
+    const c = { headers: { Cookie: qbtCookie }, httpAgent };
+    if (method === 'GET') return (await axios.get(`${QBT_URL}${path}`, c)).data;
+    if (isMultipart) return (await axios.post(`${QBT_URL}${path}`, data, { ...c, headers: { ...c.headers, ...data.getHeaders() } })).data;
+    const params = new URLSearchParams(); if (data) Object.keys(data).forEach(k => params.append(k, data[k]));
+    return (await axios.post(`${QBT_URL}${path}`, params, c)).data;
+}
+
 app.get('/api/torrents', async (req, res) => {
     try {
-        const list = await qbtRequest('GET', '/api/v2/torrents/info');
-        res.json(list.map(t => ({ hash: t.hash, name: t.name, progress: (t.progress * 100).toFixed(1), speed: (t.dlspeed / 1024).toFixed(1) + " KB/s", size: (t.size / 1024 / 1024 / 1024).toFixed(2) + " GB", status: t.state })));
+        const l = await qbtRequest('GET', '/api/v2/torrents/info');
+        res.json(l.map(t => ({ hash: t.hash, name: t.name, progress: (t.progress * 100).toFixed(1), speed: (t.dlspeed / 1024).toFixed(1) + " KB/s", size: (t.size / 1024 / 1024 / 1024).toFixed(2) + " GB", status: t.state })));
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.delete('/api/torrents/:hash', async (req, res) => {
-    try {
-        await qbtRequest('POST', '/api/v2/torrents/delete', { hashes: req.params.hash, deleteFiles: 'true' });
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/torrents/add', async (req, res) => {
-    try {
-        const { magnet } = req.body;
-        await qbtRequest('POST', '/api/v2/torrents/add', { urls: magnet });
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/torrents/upload', upload.single('torrent'), async (req, res) => {
-    try {
-        const form = new FormData();
-        form.append('torrents', fs.createReadStream(req.file.path));
-        await qbtRequest('POST', '/api/v2/torrents/add', form, true);
-        fs.unlinkSync(req.file.path);
-        res.json({ success: true });
-    } catch (e) { if (req.file) fs.unlinkSync(req.file.path); res.status(500).json({ error: e.message }); }
+    try { await qbtRequest('POST', '/api/v2/torrents/delete', { hashes: req.params.hash, deleteFiles: 'true' }); res.json({ success: true }); } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/status', (req, res) => {
@@ -166,19 +173,18 @@ app.get('/play', (req, res) => {
     if (!engine) {
         engine = torrentStream(magnet, { path: '/tmp/torrent-stream' });
         engine.progress = 0; activeEngines.set(magnet, engine);
-        engine.on('ready', () => { const file = engine.files.reduce((a, b) => a.length > b.length ? a : b); engine.mainFile = file; engine.name = file.name; file.select(); });
-        setInterval(() => { if (engine.mainFile) { const total = Math.ceil(engine.mainFile.length / engine.torrent.pieceLength); let dl = 0; for (let i=0; i<total; i++) if (engine.bitfield.get(i)) dl++; engine.progress = ((dl / total) * 100).toFixed(1); } }, 5000);
+        engine.on('ready', () => { const f = engine.files.reduce((a, b) => a.length > b.length ? a : b); engine.mainFile = f; engine.name = f.name; f.select(); });
+        setInterval(() => { if (engine.mainFile) { const t = Math.ceil(engine.mainFile.length / engine.torrent.pieceLength); let dl = 0; for (let i=0; i<t; i++) if (engine.bitfield.get(i)) dl++; engine.progress = ((dl / t) * 100).toFixed(1); } }, 5000);
     }
-    const serveFile = () => {
-        const file = engine.mainFile;
-        const range = req.headers.range && rangeParser(file.length, req.headers.range);
+    const serve = () => {
+        const f = engine.mainFile; const r = req.headers.range && rangeParser(f.length, req.headers.range);
         res.setHeader('Accept-Ranges', 'bytes'); res.setHeader('Content-Type', 'video/mp4');
-        if (!range) { res.setHeader('Content-Length', file.length); if (req.method === 'HEAD') return res.end(); return pump(file.createReadStream(), res); }
-        const { start, end } = range[0];
-        res.status(206); res.setHeader('Content-Length', end - start + 1); res.setHeader('Content-Range', `bytes ${start}-${end}/${file.length}`);
-        pump(file.createReadStream({ start, end }), res);
+        if (!r) { res.setHeader('Content-Length', f.length); if (req.method === 'HEAD') return res.end(); return pump(f.createReadStream(), res); }
+        const { start, end } = r[0];
+        res.status(206); res.setHeader('Content-Length', end - start + 1); res.setHeader('Content-Range', `bytes ${start}-${end}/${f.length}`);
+        pump(f.createReadStream({ start, end }), res);
     };
-    if (engine.mainFile) serveFile(); else engine.once('ready', serveFile);
+    if (engine.mainFile) serve(); else engine.once('ready', serve);
 });
 
-app.listen(7000, () => console.log('Secure Seedbox PRO running...'));
+app.listen(7000, () => console.log('Triple-Engine Seedbox PRO running...'));
