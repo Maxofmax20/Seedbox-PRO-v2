@@ -20,6 +20,7 @@
     "range-parser": "^1.2.1",
     "socket.io": "^4.8.3",
     "stremio-addon-sdk": "^1.6.10",
+    "systeminformation": "^5.31.5",
     "torrent-search-api": "^2.1.4",
     "torrent-stream": "^1.2.1"
   }
