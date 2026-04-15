@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seedbox PRO v2.0</title>
+    <title>Seedbox PRO v2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -24,13 +24,13 @@
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
                 <h1 class="text-2xl font-bold">Secure Access</h1>
-                <p class="text-slate-400 text-sm mt-2">Enter your credentials to manage the seedbox.</p>
+                <p class="text-slate-400 text-sm mt-2">Sign in to Seedbox PRO</p>
             </div>
             <div class="space-y-4">
                 <input type="text" id="username" placeholder="Username" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-all">
                 <input type="password" id="password" placeholder="Password" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-all">
                 <button onclick="handleLogin()" class="w-full accent-gradient py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all">Sign In</button>
-                <p id="login-error" class="text-red-400 text-xs text-center hidden">Invalid username or password.</p>
+                <p id="login-error" class="text-red-400 text-xs text-center hidden">Invalid credentials.</p>
             </div>
         </div>
     </div>
@@ -38,8 +38,8 @@
     <!-- Main Dashboard -->
     <div id="dashboard-content" class="min-h-screen flex hidden">
         <!-- Sidebar -->
-        <aside class="w-64 glass border-r border-slate-800 hidden md:flex flex-col fixed h-full z-50">
-            <div class="p-6">
+        <aside class="w-64 glass border-r border-slate-800 hidden md:flex flex-col fixed h-full z-50 overflow-y-auto custom-scrollbar">
+            <div class="p-6 border-b border-slate-800">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 accent-gradient rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -47,81 +47,160 @@
                     <span class="text-xl font-bold tracking-tight">Seedbox <span class="text-indigo-400">PRO</span></span>
                 </div>
             </div>
-            <nav class="mt-6 px-4 flex-1">
-                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-600/10 text-indigo-400 font-medium mb-2 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            
+            <nav class="p-4 space-y-1">
+                <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest px-4 mb-2">Main</div>
+                <a href="/" class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 font-medium transition-all border border-indigo-500/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     Dashboard
                 </a>
-                <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/5 transition-all mt-4">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    Logout
-                </button>
+
+                <div class="text-[10px] text-slate-500 uppercase font-bold tracking-widest px-4 mt-6 mb-2">Apps & Services</div>
+                <a href="/jellyfin" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Jellyfin Player
+                </a>
+                <a href="/radarr" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V4a1 1 0 00-1-1H4a1 1 0 00-1 1v15a1 1 0 001 1z"/></svg>
+                    Radarr (Movies)
+                </a>
+                <a href="/sonarr" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    Sonarr (TV Shows)
+                </a>
+                <a href="/prowlarr" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Prowlarr (Search)
+                </a>
+                <a href="/qbittorrent" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    qBittorrent
+                </a>
+                <a href="/jackett" target="_blank" class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    Jackett
+                </a>
+
+                <div class="pt-6">
+                    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-red-400 hover:bg-red-500/5 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        Sign Out
+                    </button>
+                </div>
             </nav>
-            <div class="p-6 border-t border-slate-800">
-                <div class="text-xs text-slate-500 mb-2 uppercase font-bold tracking-widest">Addon URL</div>
-                <div class="text-[10px] bg-slate-900 p-3 rounded-lg border border-slate-800 break-all font-mono text-indigo-300" id="manifest-url">Loading...</div>
-            </div>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 md:ml-64 p-4 md:p-10">
-            <header class="flex justify-between items-center mb-10">
-                <div><h1 class="text-3xl font-bold">Overview</h1><p class="text-slate-400 text-sm mt-1">Real-time status of your seedbox node.</p></div>
-                <button onclick="document.getElementById('add-modal').classList.remove('hidden')" class="accent-gradient px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Add New
-                </button>
+            <header class="flex justify-between items-start mb-10">
+                <div>
+                    <h1 class="text-3xl font-bold">Node Overview</h1>
+                    <p class="text-slate-400 text-sm mt-1">Status of your DuckDNS Seedbox Cluster.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="document.getElementById('guide-modal').classList.remove('hidden')" class="bg-slate-800 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-700 transition-all flex items-center gap-2 border border-slate-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Setup Guide
+                    </button>
+                    <button onclick="document.getElementById('add-modal').classList.remove('hidden')" class="accent-gradient px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Add New
+                    </button>
+                </div>
             </header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-                <div class="glass rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-lg font-bold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Active Streams</h2>
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Stremio Live</span>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+                <!-- Stremio Link -->
+                <div class="lg:col-span-2 glass rounded-2xl p-6 border-l-4 border-indigo-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold">Stremio Provider</h2>
+                        <span class="bg-green-500/10 text-green-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Ready</span>
                     </div>
-                    <div id="active-streams" class="space-y-4 text-center py-10 text-slate-500 italic text-sm">No active streams.</div>
+                    <div class="text-[11px] bg-slate-900/80 p-4 rounded-xl border border-slate-800 font-mono text-indigo-300 break-all mb-4" id="m-url-full">Loading...</div>
+                    <a id="install-btn" href="#" class="inline-block bg-indigo-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-indigo-500 transition-all">Install to Stremio App</a>
                 </div>
-                <div class="glass rounded-2xl p-6 border-l-4 border-indigo-500">
-                    <h2 class="text-lg font-bold mb-4">Network Node</h2>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center text-sm"><span class="text-slate-400">Endpoint</span><span class="font-mono text-indigo-400" id="vps-ip">stremiosandbox.duckdns.org</span></div>
-                        <div class="flex justify-between items-center text-sm"><span class="text-slate-400">Status</span><span class="bg-green-500/10 text-green-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Online</span></div>
-                    </div>
-                    <a id="install-btn" href="#" class="block w-full mt-6 bg-slate-800 text-center py-3 rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">Install to Stremio</a>
+
+                <!-- Active Streams Count -->
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">Active Buffer</h2>
+                    <div class="text-4xl font-bold" id="stream-count">0</div>
+                    <p class="text-slate-400 text-xs mt-2">Torrents currently streaming live to Stremio players.</p>
                 </div>
             </div>
 
-            <div class="glass rounded-2xl overflow-hidden shadow-xl shadow-black/20">
-                <div class="p-6 border-b border-slate-800 flex justify-between items-center">
-                    <h2 class="text-lg font-bold">Seedbox Manager</h2>
-                    <div class="text-xs font-bold text-slate-500 uppercase tracking-widest" id="torrent-count">0 Torrents</div>
+            <!-- List Grid -->
+            <div class="grid grid-cols-1 gap-10">
+                <!-- Live Streams -->
+                <div>
+                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Live Playback</h2>
+                    <div id="active-streams" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Streams load here -->
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="text-xs uppercase text-slate-500 bg-slate-900/50">
-                            <tr><th class="px-6 py-4 font-bold">Media</th><th class="px-6 py-4 font-bold">Progress</th><th class="px-6 py-4 font-bold">Speed</th><th class="px-6 py-4 font-bold text-right">Actions</th></tr>
-                        </thead>
-                        <tbody id="torrent-list" class="divide-y divide-slate-800">
-                            <tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 italic">Loading library...</td></tr>
-                        </tbody>
-                    </table>
+
+                <!-- Seedbox Manager -->
+                <div class="glass rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
+                    <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/30">
+                        <h2 class="text-lg font-bold">Permanent Seedbox (qBittorrent)</h2>
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-widest" id="torrent-count">0 Items</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-[10px] uppercase text-slate-500 bg-slate-900/80">
+                                <tr><th class="px-6 py-4 font-bold">Media File</th><th class="px-6 py-4 font-bold">Progress</th><th class="px-6 py-4 font-bold">Speed</th><th class="px-6 py-4 font-bold text-right">Actions</th></tr>
+                            </thead>
+                            <tbody id="torrent-list" class="divide-y divide-slate-800/50">
+                                <!-- Torrents load here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal -->
+    <!-- GUIDE MODAL -->
+    <div id="guide-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+        <div class="glass max-w-2xl w-full rounded-2xl p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-2xl font-bold text-indigo-400">🤖 Automation Setup Guide</h3>
+                <button onclick="document.getElementById('guide-modal').classList.add('hidden')" class="text-slate-500 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            
+            <div class="space-y-8">
+                <section>
+                    <h4 class="font-bold text-lg mb-2">Step 1: Setup Search (Prowlarr)</h4>
+                    <p class="text-slate-400 text-sm mb-3">Open <b>Prowlarr</b> from the sidebar. Add indexers like 1337x or ThePirateBay. Use <b>TorProxy</b> if blocked.</p>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs font-mono">Proxy Host: tor-proxy | Port: 9150</div>
+                </section>
+
+                <section>
+                    <h4 class="font-bold text-lg mb-2">Step 2: Link Downloader</h4>
+                    <p class="text-slate-400 text-sm mb-3">In <b>Radarr</b> and <b>Sonarr</b> settings, go to "Download Clients" and add <b>qBittorrent</b>.</p>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs font-mono">Host: 172.21.0.3 | Port: 8080 | User: admin | Pass: PtkWFsypA</div>
+                </section>
+
+                <section>
+                    <h4 class="font-bold text-lg mb-2">Step 3: Connect the Brain (Prowlarr Apps)</h4>
+                    <p class="text-slate-400 text-sm mb-3">In <b>Prowlarr</b>, go to Settings -> Apps. Add Radarr and Sonarr. This syncs your search engines to your downloaders automatically.</p>
+                </section>
+
+                <button onclick="document.getElementById('guide-modal').classList.add('hidden')" class="w-full accent-gradient py-4 rounded-xl font-bold text-lg shadow-xl shadow-indigo-500/20">Got it, let's go!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD MODAL -->
     <div id="add-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
         <div class="glass max-w-lg w-full rounded-2xl p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6"><h3 class="text-xl font-bold">Add Download</h3><button onclick="document.getElementById('add-modal').classList.add('hidden')" class="text-slate-500 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
             <div class="mb-6"><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Magnet</label><div class="flex gap-2"><input type="text" id="magnet-input" placeholder="magnet:?..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 outline-none"><button onclick="addByMagnet()" class="accent-gradient px-4 rounded-xl font-bold text-sm">Add</button></div></div>
-            <div class="relative py-4"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div><div class="relative flex justify-center"><span class="bg-[#1e293b] px-4 text-xs font-bold text-slate-500 uppercase font-bold">OR</span></div></div>
+            <div class="relative py-4"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div><div class="relative flex justify-center"><span class="bg-[#1e293b] px-4 text-xs text-slate-500 uppercase font-bold tracking-widest">OR</span></div></div>
             <div><label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Torrent File</label><input type="file" id="file-input" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600/10 file:text-indigo-400"><button onclick="uploadTorrent()" class="w-full mt-4 bg-slate-800 py-3 rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">Upload</button></div>
         </div>
     </div>
 
     <script>
         const manifestUrl = window.location.origin + '/manifest.json';
-        document.getElementById('manifest-url').innerText = manifestUrl;
+        document.getElementById('m-url-full').innerText = manifestUrl;
         document.getElementById('install-btn').href = 'stremio://' + window.location.host + '/manifest.json';
 
         async function checkAuth() {
@@ -140,47 +219,40 @@
         async function handleLogin() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+            const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
             if (res.ok) checkAuth();
             else document.getElementById('login-error').classList.remove('hidden');
         }
 
-        async function handleLogout() {
-            await fetch('/api/logout', { method: 'POST' });
-            checkAuth();
-        }
+        async function handleLogout() { await fetch('/api/logout', { method: 'POST' }); checkAuth(); }
 
         async function updateUI() {
             try {
                 const [sRes, tRes] = await Promise.all([fetch('/status'), fetch('/api/torrents')]);
-                if (sRes.status === 401) return checkAuth();
-                
+                if (sRes.status === 401) return;
                 const streams = await sRes.json();
                 const torrents = await tRes.json();
 
+                document.getElementById('stream-count').innerText = streams.length;
                 const sDiv = document.getElementById('active-streams');
-                sDiv.innerHTML = streams.length === 0 ? 'No active streams.' : streams.map(s => `
-                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 text-left">
-                        <div class="flex justify-between items-center mb-2"><span class="font-bold text-sm truncate pr-4">${s.name}</span><span class="text-[10px] font-bold text-indigo-400">${s.progress}%</span></div>
-                        <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-2"><div class="accent-gradient h-full transition-all" style="width:${s.progress}%"></div></div>
-                        <div class="flex justify-between text-[10px] text-slate-500 font-bold uppercase"><span>🚀 ${s.speed} KB/s</span><span>👤 ${s.peers} peers</span></div>
+                sDiv.innerHTML = streams.length === 0 ? '<div class="lg:col-span-3 text-center py-10 text-slate-500 italic text-sm">No live streams detected.</div>' : streams.map(s => `
+                    <div class="glass p-4 rounded-xl border border-indigo-500/20">
+                        <div class="flex justify-between items-start mb-2"><span class="font-bold text-xs truncate w-full pr-2">${s.name}</span><span class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">${s.progress}%</span></div>
+                        <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-3"><div class="accent-gradient h-full" style="width:${s.progress}%"></div></div>
+                        <div class="flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-tighter"><span>🚀 ${s.speed} KB/s</span><span>👤 ${s.peers} peers</span></div>
                     </div>
                 `).join('');
 
                 const tbody = document.getElementById('torrent-list');
-                document.getElementById('torrent-count').innerText = `${torrents.length} Torrents`;
-                tbody.innerHTML = torrents.length === 0 ? '<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500">Empty library.</td></tr>' : torrents.map(t => `
-                    <tr class="hover:bg-slate-800/30">
-                        <td class="px-6 py-4"><div class="font-semibold text-sm truncate max-w-[200px]">${t.name}</div><div class="flex gap-2 mt-1"><span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${t.status}</span><span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400">${t.size}</span></div></td>
-                        <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-24 bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-indigo-500 h-full" style="width:${t.progress}%"></div></div><span class="text-xs font-bold text-slate-400">${t.progress}%</span></div></td>
-                        <td class="px-6 py-4 text-xs font-bold text-green-400">${t.speed}</td>
+                document.getElementById('torrent-count').innerText = `${torrents.length} Items`;
+                tbody.innerHTML = torrents.length === 0 ? '<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 italic">The seedbox is currently empty.</td></tr>' : torrents.map(t => `
+                    <tr class="hover:bg-slate-800/20 transition-colors">
+                        <td class="px-6 py-4"><div class="font-semibold text-xs truncate max-w-[200px]" title="${t.name}">${t.name}</div><div class="flex gap-2 mt-1"><span class="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${t.status}</span><span class="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400">${t.size}</span></div></td>
+                        <td class="px-6 py-4"><div class="flex items-center gap-3"><div class="w-24 bg-slate-800 h-1 rounded-full overflow-hidden"><div class="bg-indigo-500 h-full transition-all duration-1000" style="width:${t.progress}%"></div></div><span class="text-[10px] font-bold text-slate-400">${t.progress}%</span></div></td>
+                        <td class="px-6 py-4 text-[10px] font-bold text-green-400">${t.speed}</td>
                         <td class="px-6 py-4 text-right flex justify-end gap-2">
-                            <a href="/api/files/${encodeURIComponent(t.name)}" target="_blank" class="p-2 hover:bg-green-500/10 hover:text-green-400 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></a>
-                            <button onclick="deleteTorrent('${t.hash}')" class="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                            <a href="/api/files/${encodeURIComponent(t.name)}" target="_blank" class="p-2 hover:bg-green-500/10 hover:text-green-400 rounded-lg transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></a>
+                            <button onclick="deleteTorrent('${t.hash}')" class="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </td>
                     </tr>
                 `).join('');
@@ -205,17 +277,9 @@
             updateUI();
         }
 
-        async function deleteTorrent(hash) {
-            if (confirm("Delete forever?")) {
-                await fetch(`/api/torrents/${hash}`, { method: 'DELETE' });
-                updateUI();
-            }
-        }
+        async function deleteTorrent(hash) { if (confirm("Delete forever?")) { await fetch(`/api/torrents/${hash}`, { method: 'DELETE' }); updateUI(); } }
 
-        function startPolling() {
-            setInterval(updateUI, 3000);
-            updateUI();
-        }
+        function startPolling() { setInterval(updateUI, 3000); updateUI(); }
 
         checkAuth();
     </script>
